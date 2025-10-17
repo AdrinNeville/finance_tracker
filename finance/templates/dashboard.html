@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h1 class="mb-4">Welcome, {{ current_user.username }}!</h1>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card balance-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Balance</h5>
+                    <h2 class="card-text">${{ "%.2f"|format(balance) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card income-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Income</h5>
+                    <h2 class="card-text">${{ "%.2f"|format(total_income) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card expense-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <h2 class="card-text">${{ "%.2f"|format(total_expense) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    {% if categories and amounts %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="expenseChart" 
+                        data-categories='{{ categories|tojson }}'
+                        data-amounts='{{ amounts|tojson }}'></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Transactions Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Transactions</h5>
+        </div>
+        <div class="card-body">
+            {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr>
+                                <td>{{ t.date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <span class="badge badge-{{ 'income' if t.type == 'Income' else 'expense' }}">
+                                        {{ t.type }}
+                                    </span>
+                                </td>
+                                <td>{{ t.category }}</td>
+                                <td>${{ "%.2f"|format(t.amount) }}</td>
+                                <td>{{ t.description or '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('main.edit_transaction', tx_id=t.id) }}" 
+                                       class="btn btn-sm btn-warning btn-action">Edit</a>
+                                    <form id="delete-form-{{ t.id }}" 
+                                          action="{{ url_for('main.delete_transaction', tx_id=t.id) }}" 
+                                          method="POST" style="display: inline;">
+                                        <button type="button" 
+                                                onclick="confirmDelete('{{ t.id }}')" 
+                                                class="btn btn-sm btn-danger btn-action">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No transactions yet. <a href="{{ url_for('main.add_transaction') }}">Add your first transaction</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

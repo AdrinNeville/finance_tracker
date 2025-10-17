@@ -17,3 +17,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 app.register_blueprint(bp)
+
+# run the application
+if __name__ == "__main__":
+    app.run(debug=True)

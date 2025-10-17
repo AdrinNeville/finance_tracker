@@ -7,8 +7,8 @@ from datetime import datetime
 import csv
 import io
 
+bp = Blueprint('finance', __name__, template_folder='templates')
 
-bp = Blueprint('main', __name__)
 
 
 # Authentication routes
